@@ -26,3 +26,17 @@ grandfather(Grandchild, Grandfather) :- grandparent(Grandfather, Grandchild), ma
 grandmother(Grandchild, Grandmother) :- grandparent(Grandmother, Grandchild), female(Grandmother).
 
 sister(Sister, SisterOf) :- parent(Parent, Sister), parent(Parent, SisterOf), female(Sister), different(Sister, SisterOf).
+brother(Brother, BrotherOf) :- parent(Parent, Brother), parent(Parent, BrotherOf), male(Brother), different(Brother, BrotherOf).
+
+% exercise 1.3
+happy(X) :- once(parent(X, _)).
+
+has2Children(X) :- once((parent(X, Y), sister(Y, Z), different(Y, Z))).
+
+% exercise 1.4
+grandchild(Grandchild, Grandparent) :- parent(Grandparent, Parent), parent(Parent, Grandchild).
+
+% exercise 1.5
+aunt(Aunt, NieceOrNephew) :- sister(Aunt, Parent), parent(Parent, NieceOrNephew).
+uncle(Uncle, NieceOrNephew) :- brother(Uncle, Parent), parent(Parent, NieceOrNephew).
+
