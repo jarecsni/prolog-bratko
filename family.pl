@@ -40,3 +40,15 @@ grandchild(Grandchild, Grandparent) :- parent(Grandparent, Parent), parent(Paren
 aunt(Aunt, NieceOrNephew) :- sister(Aunt, Parent), parent(Parent, NieceOrNephew).
 uncle(Uncle, NieceOrNephew) :- brother(Uncle, Parent), parent(Parent, NieceOrNephew).
 
+% chapter 1.3 Recursive rules
+predecessor(Predecessor, Successor) :- 
+    parent(Predecessor, Successor).
+predecessor(Predecessor, Successor) :- 
+    parent(Predecessor, Intermediate), 
+    predecessor(Intermediate, Successor).
+
+predecessor2(Predecessor, Successor) :- 
+    parent(Predecessor, Successor).
+predecessor2(Predecessor, Successor) :- 
+    parent(Intermediate, Successor), 
+    predecessor2(Predecessor, Intermediate).
