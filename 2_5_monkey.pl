@@ -3,6 +3,7 @@
 %   move(State1, Move, State2): making Move in State1 results in State2
 %       a state is represented by a term:
 %       state(MonkeyHorizontal, MonkeyVertical, BoxPosition, HasBanana)
+% Test: canget(state(atdoor, onfloor, atwindow, hasnot))
 % -------------------------------------------------------------------------- %
 
 move(state(middle, onbox, middle, hasnot), grasp, state(middle, onbox, middle, has)).
