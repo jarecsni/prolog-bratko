@@ -1,0 +1,270 @@
+================================================================================
+PROLOG EXECUTION: PROOF TREE ANALYSIS ON PAPER
+================================================================================
+
+This document demonstrates how to trace Prolog execution using proof trees,
+resolution steps, and unification details.
+
+================================================================================
+FAMILY.PL - THE KNOWLEDGE BASE
+================================================================================
+
+parent(tom, bob).
+parent(pam, bob).
+parent(tom, liz).
+parent(bob, ann).
+parent(bob, pat).
+parent(pat, jim).
+
+female(pam).
+female(liz).
+female(pat).
+female(ann).
+male(jim).
+male(tom).
+male(bob).
+
+different(X, Y) :- X \= Y.
+
+offspring(Child, Parent) :- parent(Parent, Child).
+
+mother(Child, Mother) :- parent(Mother, Child), female(Mother).
+father(Child, Father) :- parent(Father, Child), male(Father).
+
+grandparent(Grandparent, Grandchild) :- 
+    parent(Grandparent, Parent), 
+    parent(Parent, Grandchild).
+
+grandfather(Grandchild, Grandfather) :- 
+    grandparent(Grandfather, Grandchild), 
+    male(Grandfather).
+
+grandmother(Grandchild, Grandmother) :- 
+    grandparent(Grandmother, Grandchild), 
+    female(Grandmother).
+
+sister(Sister, SisterOf) :- 
+    parent(Parent, Sister), 
+    parent(Parent, SisterOf), 
+    female(Sister), 
+    different(Sister, SisterOf).
+
+brother(Brother, BrotherOf) :- 
+    parent(Parent, Brother), 
+    parent(Parent, BrotherOf), 
+    male(Brother), 
+    different(Brother, BrotherOf).
+
+predecessor(Predecessor, Successor) :- 
+    parent(Predecessor, Successor).
+predecessor(Predecessor, Successor) :- 
+    parent(Predecessor, Intermediate), 
+    predecessor(Intermediate, Successor).
+
+================================================================================
+EXAMPLE QUERY: ?- grandparent(tom, Who).
+================================================================================
+
+This query asks: "Who are the grandchildren of Tom?"
+
+================================================================================
+METHOD 1: SEQUENTIAL STEP-BY-STEP NOTATION
+================================================================================
+
+1. GOAL: grandparent(tom, Who)
+   CLAUSE: grandparent(GP, GC) :- parent(GP, P), parent(P, GC).
+   UNIFY: {GP/tom, GC/Who}
+   SUBGOALS: parent(tom, P), parent(P, Who)
+
+2. GOAL: parent(tom, P)
+   TRY: parent(tom, bob)
+   UNIFY: {P/bob} ✓
+   
+3. GOAL: parent(bob, Who)
+   TRY: parent(bob, ann)
+   UNIFY: {Who/ann} ✓
+   *** SOLUTION 1: Who = ann ***
+
+4. BACKTRACK (user types ;)
+   UNDO: {Who/ann}
+   TRY: parent(bob, pat)
+   UNIFY: {Who/pat} ✓
+   *** SOLUTION 2: Who = pat ***
+
+5. BACKTRACK (user types ;)
+   UNDO: {Who/pat}
+   NO MORE: parent(bob, _)
+   BACKTRACK to step 2
+
+6. GOAL: parent(tom, P)
+   UNDO: {P/bob}
+   TRY: parent(tom, liz)
+   UNIFY: {P/liz} ✓
+
+7. GOAL: parent(liz, Who)
+   TRY: parent(liz, _)
+   FAIL: no matching facts ✗
+
+8. BACKTRACK to step 6
+   NO MORE: parent(tom, _)
+   EXHAUSTED: false.
+
+FINAL RESULTS: Who = ann ; Who = pat
+
+================================================================================
+METHOD 2: TREE DIAGRAM FORMAT
+================================================================================
+
+                    ?- grandparent(tom, Who)
+                              |
+                    [Clause: grandparent(GP,GC) :- parent(GP,P), parent(P,GC)]
+                    [Bindings: GP=tom, GC=Who, P=?]
+                              |
+                    ┌─────────┴─────────┐
+                    │                   │
+            ?- parent(tom, P)    ?- parent(P, Who)
+                    |                   |
+        ┌───────────┼───────────┐       |
+        |           |           |       |
+    parent(tom,bob) parent(tom,liz)     |
+    [P=bob] ✓      [P=liz] ✓            |
+        |               |               |
+        |               |               |
+        ↓               ↓               ↓
+    ?- parent(bob,Who)  ?- parent(liz,Who)
+        |                   |
+    ┌───┴───┐              FAIL ✗
+    |       |
+parent(bob,ann) parent(bob,pat)
+[Who=ann] ✓    [Who=pat] ✓
+
+SOLUTIONS: Who = ann ; Who = pat
+
+================================================================================
+METHOD 3: DETAILED RESOLUTION STEPS WITH FRAMES
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 1: Initial Goal                                                │
+│ ?- grandparent(tom, Who).                                           │
+│                                                                     │
+│ Unify with clause: grandparent(GP, GC) :- parent(GP, P),            │
+│                                            parent(P, GC).           │
+│ Bindings: GP = tom, GC = Who (unbound), P = <unbound>               │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+        ┌───────────────────────┴───────────────────────┐
+        │                                               │
+┌───────────────────────┐                   ┌──────────────────────┐
+│ Step 2a: Subgoal 1    │                   │ Step 2b: Subgoal 2   │
+│ ?- parent(tom, P).    │                   │ ?- parent(P, Who).   │
+│                       │                   │ (waits for P binding)│
+│ Try facts in order:   │                   └──────────────────────┘
+└───────────────────────┘
+        ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 3: Try parent(tom, bob).                                       │
+│ Unification: parent(tom, P) = parent(tom, bob)                      │
+│ Bindings: P = bob                                                   │
+│ Result: SUCCESS ✓                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 4: Resume Subgoal 2 with P = bob                               │
+│ ?- parent(bob, Who).                                                │
+│                                                                     │
+│ Try facts in order:                                                 │
+└─────────────────────────────────────────────────────────────────────┘
+        ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 5: Try parent(bob, ann).                                       │
+│ Unification: parent(bob, Who) = parent(bob, ann)                    │
+│ Bindings: Who = ann                                                 │
+│ Result: SUCCESS ✓                                                   │
+│                                                                     │
+│ *** SOLUTION FOUND: Who = ann ***                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 6: User requests more solutions (;)                            │
+│ BACKTRACK to Step 5                                                 │
+│ Undo: Who = ann                                                     │
+│ Try next parent(bob, X) fact                                        │
+└─────────────────────────────────────────────────────────────────────┘
+        ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 7: Try parent(bob, pat).                                       │
+│ Unification: parent(bob, Who) = parent(bob, pat)                    │
+│ Bindings: Who = pat                                                 │
+│ Result: SUCCESS ✓                                                   │
+│                                                                     │
+│ *** SOLUTION FOUND: Who = pat ***                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 8: User requests more solutions (;)                            │
+│ BACKTRACK to Step 7                                                 │
+│ No more parent(bob, X) facts                                        │
+│ BACKTRACK to Step 3                                                 │
+│ Undo: P = bob                                                       │
+│ Try next parent(tom, X) fact                                        │
+└─────────────────────────────────────────────────────────────────────┘
+        ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 9: Try parent(tom, liz).                                       │
+│ Unification: parent(tom, P) = parent(tom, liz)                      │
+│ Bindings: P = liz                                                   │
+│ Result: SUCCESS ✓                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 10: Resume Subgoal 2 with P = liz                              │
+│ ?- parent(liz, Who).                                                │
+│                                                                     │
+│ Try all parent(liz, X) facts...                                     │
+│ Result: FAIL ✗ (no facts match)                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                                ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ Step 11: BACKTRACK to Step 9                                        │
+│ No more parent(tom, X) facts                                        │
+│ No more solutions.                                                  │
+│ Result: false.                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+KEY NOTATION ELEMENTS
+================================================================================
+
+Symbols:
+  ✓     = Success (goal satisfied)
+  ✗     = Failure (goal cannot be satisfied)
+  {X/Y} = Unification binding (variable X bound to value Y)
+  ?-    = Goal to prove
+  :-    = Rule definition
+  |     = Tree branch
+  ↓     = Flow continues downward
+
+Concepts:
+  UNIFY      = Match goal with clause head, bind variables
+  SUBGOAL    = Goal generated from clause body
+  BACKTRACK  = Undo bindings and try alternative
+  CHOICE POINT = Place where multiple alternatives exist
+
+================================================================================
+TIPS FOR PAPER ANALYSIS
+================================================================================
+
+1. Write the initial goal at the top
+2. For each goal, identify matching clauses/facts
+3. Show unification bindings explicitly using {Var/Value}
+4. Draw branches for each subgoal in a clause body
+5. Mark successful paths with ✓
+6. Mark failed paths with ✗
+7. Number steps to track execution order
+8. Show backtracking with arrows going back up the tree
+9. Indicate choice points where alternatives exist
+10. Track variable bindings throughout the tree
+
+================================================================================
+

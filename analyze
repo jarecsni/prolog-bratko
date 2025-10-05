@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# ============================================================================
+# Prolog Execution Analyzer - Command Line Wrapper
+# ============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ANALYZER="$SCRIPT_DIR/prolog_analyzer.pl"
+
+# Check if analyzer exists
+if [ ! -f "$ANALYZER" ]; then
+    echo "Error: prolog_analyzer.pl not found in $SCRIPT_DIR"
+    exit 1
+fi
+
+# Check arguments
+if [ $# -lt 2 ]; then
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║  PROLOG EXECUTION ANALYZER                                 ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "USAGE:"
+    echo "  $0 <file.pl> \"<goal>\" interactive"
+    echo "  $0 <file.pl> \"<goal>\" auto [depth]"
+    echo ""
+    echo "EXAMPLES:"
+    echo "  $0 family.pl \"parent(tom, X)\" interactive"
+    echo "  $0 family.pl \"grandparent(tom, Who)\" auto 5"
+    echo "  $0 2_5_monkey.pl \"canget(state(atdoor, onfloor, atwindow, hasnot))\" auto 3"
+    echo ""
+    echo "MODES:"
+    echo "  interactive - Step through execution interactively"
+    echo "  auto [depth] - Auto-analyze with depth limit (default: 5)"
+    echo ""
+    exit 1
+fi
+
+FILE="$1"
+GOAL="$2"
+MODE="${3:-auto}"
+DEPTH="${4:-5}"
+
+# Check if file exists
+if [ ! -f "$FILE" ]; then
+    echo "Error: File '$FILE' not found"
+    exit 1
+fi
+
+# Build the Prolog goal
+if [ "$MODE" = "interactive" ]; then
+    PROLOG_GOAL="analyze_file('$FILE', $GOAL, interactive)"
+elif [ "$MODE" = "auto" ]; then
+    PROLOG_GOAL="analyze_file('$FILE', $GOAL, auto($DEPTH))"
+else
+    echo "Error: Unknown mode '$MODE'. Use 'interactive' or 'auto'"
+    exit 1
+fi
+
+# Run the analyzer
+swipl -s "$ANALYZER" -g "$PROLOG_GOAL" -t halt
+
