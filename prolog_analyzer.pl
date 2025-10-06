@@ -76,7 +76,44 @@ analyze_file(File, Goal, Mode) :-
     ->  explore(Goal)
     ;   Mode = auto(Depth)
     ->  print_analysis(Goal, Depth)
+    ;   Mode = trace
+    ->  trace_execution(Goal)
     ;   write('Unknown mode'), nl
+    ).
+
+% ----------------------------------------------------------------------------
+% TRACE MODE - Actually execute and show bindings
+% ----------------------------------------------------------------------------
+
+trace_execution(Goal) :-
+    nl,
+    write('╔════════════════════════════════════════════════════════════╗'), nl,
+    write('║  EXECUTION TRACE (with actual bindings)                   ║'), nl,
+    write('╚════════════════════════════════════════════════════════════╝'), nl,
+    nl,
+    format('Executing: ~w~n~n', [Goal]),
+    trace_goal(Goal, [], 0, 1).
+
+trace_goal(Goal, Visited, Depth, StepNum) :-
+    Indent is Depth * 2,
+    print_indent(Indent),
+    format('[~w] Call: ~w~n', [StepNum, Goal]),
+
+    % Check for cycle
+    (   member_variant(Goal, Visited)
+    ->  print_indent(Indent),
+        write('      🔄 CYCLE! Already visited this goal.'), nl,
+        fail
+
+    % Try to prove the goal
+    ;   (   call(Goal)
+        ->  print_indent(Indent),
+            format('      ✓ Success: ~w~n', [Goal]),
+            true
+        ;   print_indent(Indent),
+            write('      ✗ Failed'), nl,
+            fail
+        )
     ).
 
 % ----------------------------------------------------------------------------
@@ -91,8 +128,8 @@ analyze(Goal, MaxDepth, Tree) :-
 % Helper with visited goals tracking
 analyze_helper(_, _, 0, cutoff(depth_limit)) :- !.
 
-analyze_helper(Goal, Visited, Depth, cycle(Goal)) :-
-    member_variant(Goal, Visited), !.
+analyze_helper(Goal, Visited, Depth, cycle(Goal, CycleInfo)) :-
+    find_cycle(Goal, Visited, CycleInfo), !.
 
 analyze_helper(Goal, Visited, Depth, Tree) :-
     Depth > 0,
@@ -127,6 +164,18 @@ analyze_body(Goal, Visited, Depth, Tree) :-
 member_variant(Goal, [H|_]) :- subsumes_term(H, Goal), subsumes_term(Goal, H), !.
 member_variant(Goal, [_|T]) :- member_variant(Goal, T).
 
+% Find cycle and build diagnostic information
+find_cycle(Goal, Visited, cycle_info(Goal, MatchedGoal, CallStack, Distance)) :-
+    find_cycle_helper(Goal, Visited, 1, MatchedGoal, Distance),
+    reverse(Visited, CallStack).
+
+find_cycle_helper(Goal, [H|_], Dist, H, Dist) :-
+    subsumes_term(H, Goal),
+    subsumes_term(Goal, H), !.
+find_cycle_helper(Goal, [_|T], Dist, Matched, FinalDist) :-
+    Dist1 is Dist + 1,
+    find_cycle_helper(Goal, T, Dist1, Matched, FinalDist).
+
 % ----------------------------------------------------------------------------
 % PRETTY PRINTING
 % ----------------------------------------------------------------------------
@@ -149,8 +198,10 @@ print_tree(Tree, Indent) :-
 print_node(cutoff(depth_limit), _) :-
     write('⚠ DEPTH LIMIT REACHED'), nl.
 
-print_node(cycle(Goal), _) :-
-    write('🔄 CYCLE DETECTED: '), write(Goal), nl.
+print_node(cycle(Goal, CycleInfo), Indent) :-
+    write('🔄 CYCLE DETECTED'), nl,
+    Indent1 is Indent + 2,
+    print_cycle_details(CycleInfo, Indent1).
 
 print_node(builtin(Goal, _), _) :-
     write('⚙ BUILTIN: '), write(Goal), nl.
@@ -186,6 +237,57 @@ print_indent(N) :-
     write(' '),
     N1 is N - 1,
     print_indent(N1).
+
+% Print detailed cycle information
+print_cycle_details(cycle_info(CurrentGoal, MatchedGoal, CallStack, Distance), Indent) :-
+    print_indent(Indent),
+    write('Current goal: '),
+    print_goal_with_bindings(CurrentGoal), nl,
+    print_indent(Indent),
+    write('Matches earlier goal: '),
+    print_goal_with_bindings(MatchedGoal), nl,
+    print_indent(Indent),
+    format('Distance: ~w steps back~n', [Distance]),
+    print_indent(Indent),
+    write('Problematic clause(s):'), nl,
+    Indent1 is Indent + 2,
+    forall(
+        clause(MatchedGoal, Body),
+        (   print_indent(Indent1),
+            format('~w', [MatchedGoal]),
+            (   Body = true
+            ->  write(' (fact)'), nl
+            ;   format(' :- ~w~n', [Body])
+            )
+        )
+    ),
+    print_indent(Indent),
+    write('Call stack (most recent first):'), nl,
+    print_call_stack(CallStack, 1, Indent).
+
+% Print goal with variable bindings shown
+print_goal_with_bindings(Goal) :-
+    copy_term(Goal, GoalCopy),
+    numbervars(GoalCopy, 0, _, [attvar(bind), singletons(true)]),
+    write_term(GoalCopy, [numbervars(true), quoted(true)]).
+
+print_call_stack([], _, _).
+print_call_stack([Goal|Rest], N, Indent) :-
+    Indent1 is Indent + 2,
+    print_indent(Indent1),
+    copy_term(Goal, GoalCopy),
+    numbervars(GoalCopy, 0, _, [attvar(bind), singletons(true)]),
+    format('~w. ', [N]),
+    write_term(GoalCopy, [numbervars(true), quoted(true)]),
+    write(' [variables unbound at analysis time]'),
+    (   Rest = [Next|_],
+        subsumes_term(Goal, Next),
+        subsumes_term(Next, Goal)
+    ->  write(' ← CYCLE POINT'), nl
+    ;   nl
+    ),
+    N1 is N + 1,
+    print_call_stack(Rest, N1, Indent).
 
 % ----------------------------------------------------------------------------
 % CYCLE DETECTION DEMO
@@ -290,8 +392,15 @@ explore_step(Goal, Visited, StepNum) :-
     format('~n[Step ~w] Current Goal: ~w~n', [StepNum, Goal]),
 
     % Check for cycles
-    (   member_variant(Goal, Visited)
-    ->  write('🔄 CYCLE DETECTED! This goal was already visited.'), nl,
+    (   find_cycle(Goal, Visited, CycleInfo)
+    ->  nl,
+        write('╔════════════════════════════════════════════════════════════╗'), nl,
+        write('║  🔄 CYCLE DETECTED!                                        ║'), nl,
+        write('╚════════════════════════════════════════════════════════════╝'), nl,
+        nl,
+        print_cycle_details(CycleInfo, 0),
+        nl,
+        write('This would cause infinite recursion.'), nl,
         write('Press ENTER to backtrack...'), nl,
         read_line_to_string(user_input, _)
 
