@@ -53,3 +53,18 @@ Or use findall to get them all at once:
 :- writeln('All concatenation pairs for [a, b, c]:'),
    forall(conc(L1, L2, [a, b, c]),
           format('  L1 = ~w, L2 = ~w~n', [L1, L2])).
+
+/*
+Find all months before and after May
+*/
+:- conc(Before, [may|After], [jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec]),
+   writeln('Months before May:'), writeln(Before),
+   writeln('Months after May:'), writeln(After).
+
+/*
+Find the month before and after May
+*/
+:- conc(_, [Before, may, After | _], [jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec]),
+   writeln('Month before May:'), writeln(Before),
+   writeln('Month after May:'), writeln(After).
+
