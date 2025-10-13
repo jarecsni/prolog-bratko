@@ -68,3 +68,34 @@ Find the month before and after May
    writeln('Month before May:'), writeln(Before),
    writeln('Month after May:'), writeln(After).
 
+/*
+member2/2 implementation using conc/3
+*/
+member2(X, L) :- conc(_, [X|_], L).
+
+
+/*
+Write a goal using conc/3 to delete the last 3 elements from a list L, producing another list L1. Hint: L is the concatenation of L1 and a list with 3 elements.
+*/
+delete_last_3(L, L1) :- conc(L1, [_, _, _], L).
+
+/*
+Delete the last N elements from a list
+*/
+delete_last_n(L, N, L1) :-
+    N >= 0,                      % Guard: N must be non-negative
+    length(Suffix, N),           % Create a list of length N (with unbound variables)
+    conc(L1, Suffix, L).
+
+/*
+Alternative: build a list of N elements manually
+*/
+make_list(0, []).
+make_list(N, [_|T]) :-
+    N > 0,
+    N1 is N - 1,
+    make_list(N1, T).
+
+delete_last_n_alt(L, N, L1) :-
+    make_list(N, Suffix),
+    conc(L1, Suffix, L).
