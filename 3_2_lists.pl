@@ -99,3 +99,165 @@ make_list(N, [_|T]) :-
 delete_last_n_alt(L, N, L1) :-
     make_list(N, Suffix),
     conc(L1, Suffix, L).
+
+/*
+Execution Trace (with variable renaming):
+CALL 1: make_list(3, Suffix)
+
+Prolog renames the clause to: make_list(N₁, [_₁|T₁])
+
+Unify: 3 with N₁ → N₁ = 3 ✓
+Unify: Suffix with [_₁|T₁] → Suffix = [_₁|T₁] (T₁ is unbound)
+Check: N₁ > 0 → 3 > 0 ✓
+Calculate: N1₁ is N₁ - 1 → N1₁ = 2
+New goal: make_list(2, T₁) ← We're solving for T₁ now!
+Current state:
+
+Suffix = [_₁|T₁] where T₁ = ???
+CALL 2: make_list(2, T₁) ← This is the goal from Call 1
+
+Prolog renames the clause to: make_list(N₂, [_₂|T₂]) (fresh variables!)
+
+Unify: 2 with N₂ → N₂ = 2 ✓
+Unify: T₁ with [_₂|T₂] → T₁ = [_₂|T₂] (T₂ is unbound)
+Check: N₂ > 0 → 2 > 0 ✓
+Calculate: N1₂ is N₂ - 1 → N1₂ = 1
+New goal: make_list(1, T₂) ← We're solving for T₂ now!
+Current state:
+
+Suffix = [_₁|T₁] where T₁ = [_₂|T₂]
+So: Suffix = [_₁, _₂|T₂] where T₂ = ???
+CALL 3: make_list(1, T₂) ← This is the goal from Call 2
+
+Prolog renames the clause to: make_list(N₃, [_₃|T₃]) (fresh variables!)
+
+Unify: 1 with N₃ → N₃ = 1 ✓
+Unify: T₂ with [_₃|T₃] → T₂ = [_₃|T₃] (T₃ is unbound)
+Check: N₃ > 0 → 1 > 0 ✓
+Calculate: N1₃ is N₃ - 1 → N1₃ = 0
+New goal: make_list(0, T₃) ← We're solving for T₃ now!
+Current state:
+
+Suffix = [_₁|T₁] where T₁ = [_₂|T₂] where T₂ = [_₃|T₃]
+So: Suffix = [_₁, _₂, _₃|T₃] where T₃ = ???
+CALL 4: make_list(0, T₃) ← This is the goal from Call 3
+
+Prolog tries the base case: make_list(0, [])
+
+Unify: 0 with 0 → ✓
+Unify: T₃ with [] → T₃ = [] ✓
+No more goals! Success!
+Final state:
+
+Suffix = [_₁, _₂, _₃|T₃] where T₃ = []
+So: Suffix = [_₁, _₂, _₃]
+The Key Insight:
+In Call 2, when we match make_list(N, [_|T]), the T in that clause is NOT the same as the T from Call 1!
+
+Here's the mapping:
+
+Call 1's T → I called it T₁
+Call 2's T → I called it T₂ (different variable!)
+Call 3's T → I called it T₃ (different variable!)
+The connection happens through the GOAL:
+
+Call 1 creates goal make_list(2, T₁) ← T₁ from Call 1
+Call 2 matches this with make_list(N₂, [_₂|T₂]) ← T₂ is Call 2's local variable
+The unification T₁ = [_₂|T₂] connects Call 1's T₁ to Call 2's structure
+*/
+
+/*
+`Suffix = [_₁, _₂, _₃]` is the **simplified view** after all unifications are complete.
+
+But the **actual structure** is:
+
+```
+Suffix = [_₁|T₁]
+  where T₁ = [_₂|T₂]
+    where T₂ = [_₃|T₃]
+      where T₃ = []
+```
+
+It's **nested unifications**, not a flat list. Russian dolls is the perfect analogy.
+
+**In memory, it's literally:**
+
+```
+Suffix points to: [_₁ | pointer-to-T₁]
+T₁ points to:     [_₂ | pointer-to-T₂]
+T₂ points to:     [_₃ | pointer-to-T₃]
+T₃ points to:     []
+```
+
+When you **follow all the pointers**, you get `[_₁, _₂, _₃]`, but the underlying structure is a chain of linked cells, each created by a different recursive call.
+
+**This is why `make_list(0, [])` doesn't wipe anything out** - it only binds `T₃ = []`, the innermost doll. All the outer dolls (`Suffix`, `T₁`, `T₂`) are already constructed and pointing to each other.
+
+You've got it. That's the real mental model. The "simplified" notation `[_₁, _₂, _₃]` is just syntactic sugar for the nested structure.
+
+*/
+
+/*
+**Exactly, Cooper!** The base case determines the **direction of data flow**.
+
+## Base Cases:
+
+**`make_list`:**
+```prolog
+make_list(0, []).
+```
+- Unifies the result with `[]`
+- This is the **starting point** for building
+- Data flows **outward** from here
+
+**`member`:**
+```prolog
+member(X, [X|_]).
+```
+- Matches when element is found
+- This is the **stopping point** for searching
+- Data flows **inward** to here
+
+## The Pattern:
+
+**Construction (build outward):**
+```prolog
+base_case(..., []).              % Start with []
+recursive_case(..., [H|T]) :-    % Wrap it with [H|...]
+    recursive_case(..., T).
+```
+- Base case provides the **seed value** (`[]`)
+- Recursion **wraps** it layer by layer
+- Result built as recursion **unwinds**
+
+**Search/Consumption (search inward):**
+```prolog
+base_case(X, [X|_]).             % Found it!
+recursive_case(X, [_|T]) :-      % Not here, keep looking
+    recursive_case(X, T).
+```
+- Base case provides the **success condition**
+- Recursion **peels** layers until match
+- Result found as recursion **descends**
+
+## Another Example - `conc/3`:
+
+```prolog
+conc([], SecondList, SecondList).              % Base: first list empty
+conc([Head|RestOfFirst], Second, [Head|RestOfResult]) :-
+    conc(RestOfFirst, Second, RestOfResult).
+```
+
+This is a **constructor** like `make_list`:
+- Base case: `conc([], L, L)` - when first list is empty, result is second list
+- Builds result from inside-out as recursion unwinds
+- `RestOfResult` gets filled by recursive call, then wrapped with `Head`
+
+## The Rule:
+
+**Base case determines direction:**
+- Base case returns a **value** (like `[]`) → **Constructor** (builds outward)
+- Base case checks a **condition** (like `X = X`) → **Searcher** (searches inward)
+
+You nailed it. The base case is the key.
+*/
