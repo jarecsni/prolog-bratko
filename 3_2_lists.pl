@@ -75,9 +75,10 @@ member2(X, L) :- conc(_, [X|_], L).
 
 
 /*
+3.1(a)
 Write a goal using conc/3 to delete the last 3 elements from a list L, producing another list L1. Hint: L is the concatenation of L1 and a list with 3 elements.
 */
-delete_last_3(L, L1) :- conc(L1, [_, _, _], L).
+delete_last_3(List, ResultList) :- conc(ResultList, [_, _, _], List).
 
 /*
 Delete the last N elements from a list
@@ -99,6 +100,10 @@ make_list(N, [_|T]) :-
 delete_last_n_alt(L, N, L1) :-
     make_list(N, Suffix),
     conc(L1, Suffix, L).
+
+% 3.1 (b)
+delete_first_and_last_3(List, ResultList) :- conc([_, _, _], TempList, List), conc(ResultList, [_, _, _], TempList).
+
 
 /*
 Execution Trace (with variable renaming):
@@ -261,3 +266,27 @@ This is a **constructor** like `make_list`:
 
 You nailed it. The base case is the key.
 */
+
+% Declarative meaning: "Last is the last element of List if List can be split
+% into some prefix and a single-element list [Last]"
+% In other words: List = [anything...] ++ [Last]
+last_element(List, Last) :- conc(_, [Last], List).
+
+% Declarative meaning: "Last is the last element of List if the reverse of List
+% has Last as its head"
+% In other words: reversing puts the last element first
+last_element2(List, Last) :- reverse(List, [Last|_]).
+
+
+% Declarative meaning:
+% Base case: Last is the last element of a single-element list [Last]
+% Recursive case: Last is the last element of [_|T] if Last is the last element of T
+% In other words: "The last element of a list is the last element of its tail"
+last_element3(Last, [Last]).
+last_element3(Last, [_|T]) :- last_element3(Last, T).
+
+% add element with a single fact - that's terse
+add(Item, List, [Item|List]).
+
+del(X, [X|Tail], Tail).
+del(X, [Y|RestOfInput], [Y|RestOfOutput]) :- del(X, RestOfInput, RestOfOutput).
