@@ -1,10 +1,32 @@
 member(X, [X|_]).
 member(X, [_|T]) :- member(X, T).
 
-% Base case: concatenating empty list with any list gives that list
+/**
+ * conc/3 - Concatenate two lists
+ *
+ * Declarative meaning: "ResultList is the concatenation of FirstList and SecondList"
+ *
+ * Base case: Concatenating empty list with any list gives that list
+ *   conc([], SecondList, SecondList) - when first list is empty, result equals second list
+ *
+ * Recursive case: Move head from first list to result, recurse on tail
+ *   conc([Head|RestOfFirst], SecondList, [Head|RestOfResult])
+ *   - [Head|RestOfFirst]: decompose first list (search pattern)
+ *   - [Head|RestOfResult]: compose result list (build pattern)
+ *   - Head is preserved from input to output
+ *   - RestOfResult gets filled by recursive call on RestOfFirst
+ *
+ * Execution pattern:
+ *   - RestOfFirst: searcher (gets smaller, peels off heads going down)
+ *   - RestOfResult: builder (gets filled, Russian doll structure going up)
+ *
+ * Works in multiple directions:
+ *   conc([a,b], [c,d], R)     -> R = [a,b,c,d]  (concatenate)
+ *   conc(X, [c,d], [a,b,c,d]) -> X = [a,b]      (find prefix)
+ *   conc([a,b], Y, [a,b,c,d]) -> Y = [c,d]      (find suffix)
+ *   conc(X, Y, [a,b,c])       -> multiple solutions (all splits)
+**/
 conc([], SecondList, SecondList).
-
-% Recursive case: move head from first list to result, recurse on tail
 conc([Head|RestOfFirst], SecondList, [Head|RestOfResult]) :-
     conc(RestOfFirst, SecondList, RestOfResult).
 
@@ -83,23 +105,23 @@ delete_last_3(List, ResultList) :- conc(ResultList, [_, _, _], List).
 /*
 Delete the last N elements from a list
 */
-delete_last_n(L, N, L1) :-
+delete_last_n(List, N, ResultList) :-
     N >= 0,                      % Guard: N must be non-negative
     length(Suffix, N),           % Create a list of length N (with unbound variables)
-    conc(L1, Suffix, L).
+    conc(ResultList, Suffix, List).
 
 /*
 Alternative: build a list of N elements manually
 */
 make_list(0, []).
-make_list(N, [_|T]) :-
+make_list(N, [_|Remainder]) :-
     N > 0,
     N1 is N - 1,
-    make_list(N1, T).
+    make_list(N1, Remainder).
 
-delete_last_n_alt(L, N, L1) :-
+delete_last_n_alt(List, N, ResultList) :-
     make_list(N, Suffix),
-    conc(L1, Suffix, L).
+    conc(ResultList, Suffix, List).
 
 % 3.1 (b)
 delete_first_and_last_3(List, ResultList) :- conc([_, _, _], TempList, List), conc(ResultList, [_, _, _], TempList).
