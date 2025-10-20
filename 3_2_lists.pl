@@ -310,5 +310,70 @@ last_element3(Last, [_|T]) :- last_element3(Last, T).
 % add element with a single fact - that's terse
 add(Item, List, [Item|List]).
 
+/**
+ * del/3 - Delete first occurrence of element from list
+ *
+ * Declarative meaning: "OutputList is InputList with the first occurrence of Element removed"
+ *
+ * Base case: Element found at head - result is the tail
+ *   del(Element, [Element|Tail], Tail)
+ *   - When target element is at the head, delete it by returning the tail
+ *   - This stops the recursion and provides the "cut point"
+ *
+ * Recursive case: Element not at head - preserve head and recurse on tail  
+ *   del(Element, [Head|RestOfInput], [Head|RestOfOutput])
+ *   - [Head|RestOfInput]: decompose input list (Head ≠ Element)
+ *   - [Head|RestOfOutput]: compose output list (preserve Head)
+ *   - Head is passed through unchanged from input to output
+ *   - RestOfOutput gets filled by recursive call on RestOfInput
+ *
+ * Execution pattern:
+ *   - Searches through list until Element is found
+ *   - Builds result structure as recursion unwinds
+ *   - Elements before target are preserved in order
+ *   - Elements after target are preserved by base case
+ *
+ * Usage examples:
+ *   del(b, [a,b,c], R)     -> R = [a,c]        (delete element)
+ *   del(x, [a,b,c], R)     -> R = [a,b,c]      (element not found)
+ *   del(X, [a,b,c], [a,c]) -> X = b            (find deleted element)
+ *   del(b, L, [a,c])       -> L = [a,b,c]      (reconstruct original)
+**/
+
+% Base case: Element found at head of list
+% Declarative meaning: "OutputList is Tail when Element is the head of [Element|Tail]"
 del(X, [X|Tail], Tail).
+
+% Recursive case: Element not found at head - skip this element and keep searching
+% The head (Y) goes into the result unchanged, continue deleting from the tail
 del(X, [Y|RestOfInput], [Y|RestOfOutput]) :- del(X, RestOfInput, RestOfOutput).
+
+/**
+ * sublist/2 - Check if one list is a sublist of another
+ *
+ * Declarative meaning: "Sublist occurs within List if List can be split into
+ * three parts: some prefix, the Sublist itself, and some suffix"
+ * In other words: List = Prefix ++ Sublist ++ Suffix
+ *
+ * Implementation uses two concatenations:
+ *   1. conc(Prefix, Rest, List)     - split List into Prefix and Rest
+ *   2. conc(Sublist, Suffix, Rest)  - split Rest into Sublist and Suffix
+ *
+ * This effectively finds all possible ways to embed Sublist within List.
+ *
+ * Usage examples:
+ *   sublist([d,e], [a,b,c,d,e,f,g])     -> true
+ *   sublist([a,b], [a,b,c,d])           -> true  
+ *   sublist([b,d], [a,b,c,d])           -> false (not contiguous)
+ *   sublist([], [a,b,c])                -> true  (empty list is sublist of any list)
+ *   sublist([a,b,c], [a,b,c])           -> true  (list is sublist of itself)
+ *
+ * How it works:
+ *   - First conc/3 generates all possible splits of List into Prefix + Rest
+ *   - Second conc/3 checks if Rest starts with Sublist
+ *   - Succeeds when both conditions are met
+ *   - Backtracks to find all possible positions where Sublist occurs
+**/
+sublist(Sublist, List) :-
+    conc(_, Rest, List),           % Split List into some prefix and Rest
+    conc(Sublist, _, Rest).        % Check if Rest starts with Sublist
