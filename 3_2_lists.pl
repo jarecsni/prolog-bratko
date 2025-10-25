@@ -348,6 +348,10 @@ del(X, [X|Tail], Tail).
 % The head (Y) goes into the result unchanged, continue deleting from the tail
 del(X, [Y|RestOfInput], [Y|RestOfOutput]) :- del(X, RestOfInput, RestOfOutput).
 
+% Insert an element at the beginning of a list
+insert(X, List, BiggerList) :- del(X, BiggerList, List).
+
+
 /**
  * sublist/2 - Check if one list is a sublist of another
  *
@@ -377,3 +381,50 @@ del(X, [Y|RestOfInput], [Y|RestOfOutput]) :- del(X, RestOfInput, RestOfOutput).
 sublist(Sublist, List) :-
     conc(_, Rest, List),           % Split List into some prefix and Rest
     conc(Sublist, _, Rest).        % Check if Rest starts with Sublist
+
+
+/**
+ * permutation/2 - Generate all permutations of a list
+ *
+ * Declarative meaning: "Result is a permutation of InputList if Result contains
+ * exactly the same elements as InputList but possibly in a different order"
+ *
+ * Base case: Empty list has only one permutation - itself
+ *   permutation([], [])
+ *   - The empty list is the only permutation of the empty list
+ *
+ * Recursive case: Permute by removing head, permuting tail, then inserting head anywhere
+ *   permutation([X|Tail], Result)
+ *   - Remove head X from input list, leaving Tail
+ *   - Generate a permutation (Rest) of the Tail
+ *   - Insert X at any position in Rest to create Result
+ *   - This generates all possible permutations through backtracking
+ *
+ * Algorithm strategy:
+ *   1. Take first element X from input list
+ *   2. Recursively generate all permutations of remaining elements
+ *   3. For each permutation of the tail, insert X at every possible position
+ *   4. Each insertion creates a different permutation of the original list
+ *
+ * Usage examples:
+ *   permutation([a,b,c], R)        -> R = [a,b,c]; [a,c,b]; [b,a,c]; [b,c,a]; [c,a,b]; [c,b,a]
+ *   permutation([1,2], R)          -> R = [1,2]; [2,1]
+ *   permutation([], R)             -> R = []
+ *   permutation(L, [b,a,c])        -> L = [a,b,c]; [a,c,b]; [b,a,c]; [b,c,a]; [c,a,b]; [c,b,a]
+ *
+ * Note: Uses insert/3 which can insert an element at any position in a list,
+ * enabling the generation of all possible arrangements through backtracking.
+**/
+permutation2([], []).
+permutation2([X|Tail], Result) :-
+    permutation2(Tail, Rest),
+    insert(X, Rest, Result).
+
+% exercise 3.3 - 
+% evenlength/1 - Check if a list has an even number of elements
+% oddlength/1 - Check if a list has an odd number of elements
+
+evenlength([]).
+evenlength([_|Tail]) :- oddlength(Tail).
+
+oddlength([_|Tail]) :- evenlength(Tail).
