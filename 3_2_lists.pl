@@ -424,7 +424,12 @@ permutation2([X|Tail], Result) :-
 % evenlength/1 - Check if a list has an even number of elements
 % oddlength/1 - Check if a list has an odd number of elements
 
+evenlength1([]).
+evenlength1([_|Tail]) :- oddlength1(Tail).
+oddlength1([_]).
+oddlength1([_|Tail]) :- evenlength1(Tail).
+
+
 evenlength([]).
 evenlength([_|Tail]) :- oddlength(Tail).
-
 oddlength([_|Tail]) :- evenlength(Tail).
