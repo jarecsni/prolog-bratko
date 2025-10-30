@@ -433,3 +433,11 @@ oddlength1([_|Tail]) :- evenlength1(Tail).
 evenlength([]).
 evenlength([_|Tail]) :- oddlength(Tail).
 oddlength([_|Tail]) :- evenlength(Tail).
+
+% Reverse a list
+reverse([], []).
+reverse([Head|Tail], Result) :- 
+    reverse(Tail, ReversedTail),
+    conc(ReversedTail, [Head], Result).
+
+
