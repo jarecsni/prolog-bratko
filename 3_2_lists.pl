@@ -440,4 +440,8 @@ reverse([Head|Tail], Result) :-
     reverse(Tail, ReversedTail),
     conc(ReversedTail, [Head], Result).
 
-
+reverse_efficient(List, Result) :-
+  reverse_acc(List, [], Result).
+reverse_acc([], Acc, Acc).
+reverse_acc([Head|Tail], Acc, Result) :-
+  reverse_acc(Tail, [Head|Acc], Result).
