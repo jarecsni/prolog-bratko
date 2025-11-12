@@ -556,3 +556,12 @@ translate([], []).
 translate([Number|RestOfNumbers], [Word|RestOfWords]) :-
     means(Number, Word),
     translate(RestOfNumbers, RestOfWords).
+
+% the empty set is a subset of any set
+subset(_, []).
+
+% an element included in the subset (add head to subset and recurse)
+subset([Head|Tail], [Head|RestOfSubset]) :- subset(Tail, RestOfSubset).
+
+% an element not included in the subset (just skip and recurse)
+subset([_|Tail], Subset) :- subset(Tail, Subset).
