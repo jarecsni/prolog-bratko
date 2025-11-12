@@ -445,3 +445,114 @@ reverse_efficient(List, Result) :-
 reverse_acc([], Acc, Acc).
 reverse_acc([Head|Tail], Acc, Result) :-
   reverse_acc(Tail, [Head|Acc], Result).
+
+% 3.5 palindrom
+palindrom(List) :- reverse(List, List).
+palindrom_efficient(List) :- reverse_efficient(List, List).
+
+/**
+ * shift/2 - Rotate list left by one position
+ *
+ * Declarative meaning: "List2 is List1 rotated left by one element"
+ * The first element moves to the end.
+ *
+ * Base case: Empty list shifts to empty list
+ *   shift([], [])
+ *
+ * Recursive case: Move head to tail
+ *   shift([Head|Tail], Result)
+ *   - Take the head element
+ *   - Concatenate tail with [Head] to get Result
+ *   - This moves the first element to the last position
+ *
+ * Usage examples:
+ *   shift([a,b,c,d], R)     -> R = [b,c,d,a]
+ *   shift([1], R)           -> R = [1]
+ *   shift([], R)            -> R = []
+ *   shift([a,b], [b,a])     -> true
+ *
+ * Works bidirectionally:
+ *   shift([a,b,c], R)       -> R = [b,c,a]  (rotate left)
+ *   shift(L, [b,c,a])       -> L = [a,b,c]  (rotate right/reverse operation)
+**/
+shift([], []).
+shift([Head|Tail], Result) :- conc(Tail, [Head], Result).
+
+/**
+ * shiftby/3 - Rotate list left by N positions
+ *
+ * Declarative meaning: "List2 is List1 rotated left by N elements"
+ * Elements that shift out on the left enter on the right.
+ *
+ * Base case: Shifting by 0 leaves list unchanged
+ *   shiftby(List, List, 0)
+ *
+ * Recursive case: Shift once, then shift N-1 more times
+ *   shiftby(List1, List2, N)
+ *   - Shift List1 once to get TempList
+ *   - Decrement N to get N1
+ *   - Recursively shift TempList by N1 to get List2
+ *
+ * Usage examples:
+ *   shiftby([a,b,c,d], R, 2)     -> R = [c,d,a,b]
+ *   shiftby([1,2,3], R, 1)       -> R = [2,3,1]
+ *   shiftby([a,b,c], R, 0)       -> R = [a,b,c]
+ *   shiftby([a,b,c], R, 3)       -> R = [a,b,c]  (full rotation)
+ *   shiftby([], R, 5)            -> R = []
+ *
+ * Note: For lists of length L, shifting by L returns the original list.
+ * Negative N values will cause failure (could be extended to support right shifts).
+**/
+shiftby(List, List, 0).
+shiftby(List1, List2, N) :-
+    N > 0,
+    shift(List1, TempList),
+    N1 is N - 1,
+    shiftby(TempList, List2, N1).
+
+means(0, zero).
+means(1, one).
+means(2, two).
+means(3, three).
+means(4, four).
+means(5, five).
+means(6, six).
+means(7, seven).
+means(8, eight).
+means(9, nine).
+
+/**
+ * translate/2 - Convert list of numbers to list of corresponding words
+ *
+ * Declarative meaning: "WordList contains the word representations of the numbers in NumberList"
+ * Each number is converted to its corresponding word using the means/2 predicate.
+ *
+ * Base case: Empty list translates to empty list
+ *   translate([], [])
+ *   - No numbers to translate results in no words
+ *
+ * Recursive case: Translate head number to word, recurse on tail
+ *   translate([Number|RestOfNumbers], [Word|RestOfWords])
+ *   - Number gets converted to Word using means(Number, Word)
+ *   - RestOfNumbers gets recursively translated to RestOfWords
+ *   - Result is built by combining Word with translated RestOfWords
+ *
+ * Execution pattern:
+ *   - Processes numbers one by one from left to right
+ *   - Each number must have a corresponding means/2 fact or translation fails
+ *   - Builds result list in same order as input list
+ *
+ * Usage examples:
+ *   translate([1,2,3], R)           -> R = [one,two,three]
+ *   translate([0,5,9], R)           -> R = [zero,five,nine]
+ *   translate([], R)                -> R = []
+ *   translate([1,10,2], R)          -> fails (no means(10, _) fact)
+ *   translate(L, [one,two])         -> L = [1,2]
+ *
+ * Bidirectional: Can translate numbers to words or words back to numbers
+ * depending on which argument is instantiated.
+**/
+translate([], []).
+translate([Number|RestOfNumbers], [Word|RestOfWords]) :-
+    means(Number, Word),
+    translate(RestOfNumbers, RestOfWords).
