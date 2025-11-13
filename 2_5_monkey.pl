@@ -18,3 +18,11 @@ canget(state(_, _, _, has)).
 canget(State1) :-
     move(State1, _Move, State2),
     canget(State2).
+
+
+% version returning the list of moves
+canget(state(_, _, _, has), []).
+canget(State1, [Move|RestActions]) :-
+    move(State1, Move, State2),
+    canget(State2, RestActions).
+
