@@ -557,6 +557,48 @@ translate([Number|RestOfNumbers], [Word|RestOfWords]) :-
     means(Number, Word),
     translate(RestOfNumbers, RestOfWords).
 
+
+/**
+ * subset/2 - Generate all subsets of a given set (list)
+ *
+ * Declarative meaning: "Subset is a subset of Set if every element in Subset
+ * also appears in Set, maintaining the same relative order"
+ *
+ * Base case: Empty list is a subset of any set
+ *   subset(_, [])
+ *   - The empty set is a subset of every set by definition
+ *   - This provides the termination condition for recursion
+ *
+ * Recursive case 1: Include current element in subset
+ *   subset([Head|Tail], [Head|RestOfSubset])
+ *   - Head element is included in both the original set and the subset
+ *   - RestOfSubset is formed by taking a subset of Tail
+ *   - This represents the "choose to include" decision
+ *
+ * Recursive case 2: Exclude current element from subset
+ *   subset([_|Tail], Subset)
+ *   - Head element is in the original set but not in the subset
+ *   - Subset is formed by taking a subset of Tail (ignoring Head)
+ *   - This represents the "choose to exclude" decision
+ *
+ * Algorithm strategy:
+ *   - For each element in the input set, make a binary choice:
+ *     1. Include it in the subset (clause 2)
+ *     2. Exclude it from the subset (clause 3)
+ *   - Backtracking explores both choices, generating all possible subsets
+ *   - Order is preserved: subset elements appear in same order as original
+ *
+ * Usage examples:
+ *   subset([a,b,c], S)          -> S = []; [a]; [b]; [c]; [a,b]; [a,c]; [b,c]; [a,b,c]
+ *   subset([1,2], S)            -> S = []; [1]; [2]; [1,2]
+ *   subset([], S)               -> S = []
+ *   subset([a,b,c], [a,c])      -> true (checks if [a,c] is subset of [a,b,c])
+ *   subset([a,b,c], [c,a])      -> false (order not preserved)
+ *
+ * Note: Generates 2^n subsets for a set of size n, including empty set and the set itself.
+ * Elements in subsets maintain the same relative order as in the original set.
+**/
+
 % the empty set is a subset of any set
 subset(_, []).
 
@@ -565,3 +607,48 @@ subset([Head|Tail], [Head|RestOfSubset]) :- subset(Tail, RestOfSubset).
 
 % an element not included in the subset (just skip and recurse)
 subset([_|Tail], Subset) :- subset(Tail, Subset).
+
+
+/**
+ * dividelist/3 - Divide a list into two sublists by alternating elements
+ *
+ * Declarative meaning: "List1 and List2 are formed by splitting InputList,
+ * where odd-positioned elements go to List1 and even-positioned elements go to List2"
+ *
+ * Base case 1: Empty list divides into two empty lists
+ *   dividelist([], [], [])
+ *   - No elements to distribute results in two empty lists
+ *
+ * Base case 2: Single element goes to first list, second list remains empty
+ *   dividelist([X], [X], [])
+ *   - When only one element remains, it goes to List1
+ *   - List2 gets no elements (empty)
+ *   - This handles odd-length lists properly
+ *
+ * Recursive case: Take two elements, distribute them, recurse on remainder
+ *   dividelist([X, Y | Rest], [X|List1], [Y|List2])
+ *   - X (first element) goes to List1
+ *   - Y (second element) goes to List2
+ *   - Rest is recursively divided into List1 and List2
+ *   - This maintains the alternating pattern
+ *
+ * Algorithm strategy:
+ *   - Processes elements in pairs when possible
+ *   - First element of each pair goes to first sublist
+ *   - Second element of each pair goes to second sublist
+ *   - Maintains relative order within each sublist
+ *   - Handles both even and odd length lists correctly
+ *
+ * Usage examples:
+ *   dividelist([a,b,c,d], L1, L2)     -> L1 = [a,c], L2 = [b,d]
+ *   dividelist([1,2,3,4,5], L1, L2)   -> L1 = [1,3,5], L2 = [2,4]
+ *   dividelist([x], L1, L2)           -> L1 = [x], L2 = []
+ *   dividelist([], L1, L2)            -> L1 = [], L2 = []
+ *   dividelist([a,b], L1, L2)         -> L1 = [a], L2 = [b]
+ *
+ * Note: For odd-length lists, the extra element goes to the first list.
+ * This is a common pattern for "dealing cards" or round-robin distribution.
+**/
+dividelist([], [], []).
+dividelist([X], [X], []).
+dividelist([X, Y | Rest], [X|List1], [Y|List2]) :- dividelist(Rest, List1, List2).
