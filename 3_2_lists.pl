@@ -652,3 +652,23 @@ subset([_|Tail], Subset) :- subset(Tail, Subset).
 dividelist([], [], []).
 dividelist([X], [X], []).
 dividelist([X, Y | Rest], [X|List1], [Y|List2]) :- dividelist(Rest, List1, List2).
+
+flatten_nontco([], []).
+flatten_nontco([Head|Tail], [Head|FlattenedTail]) :-
+    \+ is_list(Head),
+    flatten_nontco(Tail, FlattenedTail).
+flatten_nontco([Head|Tail], Flattened) :-
+    flatten_nontco(Head, FlattenedHead),
+    flatten_nontco(Tail, FlattenedTail),
+    conc(FlattenedHead, FlattenedTail, Flattened).
+
+flatten_acc(List, Flattened) :-
+    flatten_acc(List, [], ReverseFlattened),
+    reverse(ReverseFlattened, Flattened).
+flatten_acc([], Acc, Acc).
+flatten_acc([Head|Tail], Acc, Result) :-
+    \+ is_list(Head),
+    flatten_acc(Tail, [Head|Acc], Result).
+flatten_acc([Head|Tail], Acc, Result) :-
+    flatten_acc(Head, Acc, NewAcc),
+    flatten_acc(Tail, NewAcc, Result).
