@@ -22,3 +22,16 @@ test3 :-
     write('Pretty: '), write(Term), nl,
     write('Canonical: '), write_canonical(Term), nl.
 
+% 3.14
+t(0+1, 1+0).
+t(X+0+1, X+1+0).
+t(X+1+1, Z) :-
+    t(X+1, X1),
+    t(X1+1, Z).
+
+/**
+    Questions:
+    1) ?- t(0 + 1, A). => A = 1+0.
+    2) ?- t(0 + 1 + 1, B). B = 1+1+0.
+    3) ?- t(1 + 0 + 1 + 1 + 1, C). => C = 
+ **/
