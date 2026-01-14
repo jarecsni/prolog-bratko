@@ -35,3 +35,11 @@ t(X+1+1, Z) :-
     2) ?- t(0 + 1 + 1, B). B = 1+1+0.
     3) ?- t(1 + 0 + 1 + 1 + 1, C). => C = 
  **/
+
+% 3.15 - Operator versions of member, conc, del
+
+% member as "in" operator
+:- op(600, xfx, in).
+
+X in [X|_].
+X in [_|T] :- X in T.
