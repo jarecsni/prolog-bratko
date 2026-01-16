@@ -39,7 +39,25 @@ t(X+1+1, Z) :-
 % 3.15 - Operator versions of member, conc, del
 
 % member as "in" operator
+% Usage: a in [a, b, c].
 :- op(600, xfx, in).
 
 X in [X|_].
 X in [_|T] :- X in T.
+
+% conc as "and ... gives" operators
+% Usage: [a,b] and [c,d] gives Result.
+:- op(500, xfx, and).
+:- op(600, xfx, gives).
+
+[] and L gives L.
+[H|T] and L gives [H|R] :- T and L gives R.
+
+% del as "deleting ... from ... gives" operators
+% Usage: deleting b from [a,b,c] gives Result.
+:- op(400, xfx, from).
+:- op(450, fx, deleting).
+% Note: 'gives' already defined above at 600
+
+deleting X from [X|T] gives T.
+deleting X from [Y|T] gives [Y|R] :- deleting X from T gives R.
