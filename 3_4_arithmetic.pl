@@ -23,3 +23,7 @@ llength([], 0).
 llength([_|T], N) :-
     llength(T, N1),
     N is N1 + 1.
+
+llength1([], 0).
+llength1([_|Tail], 1 + N) :-
+    llength1(Tail, N).
