@@ -37,3 +37,22 @@ ordered([X]).
 ordered([A,B|T]) :-
     A =< B,
     ordered([B|T]).
+
+% -------------------------------------------------------------------------- %
+% 3.20
+% subsum(Set, Sum, SubSet) 
+% Set is a list of numbers, SubSet is a subset of these, and sum of the 
+% numbers in SubSet is Sum.
+% 
+% Example
+% subsum([1,2,5,3,2], 5, Sub).
+% Sub = [1,2,2]
+% Sub = [2,3]
+% Sub = [5]
+% -------------------------------------------------------------------------- %
+subsum([], 0, []).
+subsum([N|Set], Sum, [N|Sub]) :- 
+    Sum1 is Sum - N,
+    subsum(Set, Sum1, Sub).
+subsum([_|Set], Sum, Sub) :-
+    subsum(Set, Sum, Sub).
