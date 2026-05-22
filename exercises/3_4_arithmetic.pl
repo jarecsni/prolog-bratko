@@ -56,3 +56,33 @@ subsum([N|Set], Sum, [N|Sub]) :-
     subsum(Set, Sum1, Sub).
 subsum([_|Set], Sum, Sub) :-
     subsum(Set, Sum, Sub).
+
+% -------------------------------------------------------------------------- %
+% 3.21
+% between(N1, N2, X)
+% find all X that satisfy N1 <= X <= N2
+% -------------------------------------------------------------------------- %
+between(N1, N2, N1) :-
+    N1 =< N2.
+between(N1, N2, X) :-
+    N1 < N2,
+    N1Next is N1 + 1,
+    between(N1Next, N2, X).
+
+% -------------------------------------------------------------------------- %
+% 3.22
+% define operators 'if' 'then' 'else' and ':=' so that the following becomes legal term:
+% if X > Y then Z := X else Z := Y
+% -------------------------------------------------------------------------- %
+:- op(1000, fx, if).
+:- op(900, xfx, then).
+:- op(800, xfx, else).
+:- op(700, xfx, :=).
+
+if Val1 > Val2 then Var := Val3 else Var := Val4 :-
+    Val1 > Val2,
+    Var = Val3.
+
+if Val1 > Val2 then Var := Val3 else Var := Val4 :- 
+    Val1 =< Val2,
+    Var = Val4.
