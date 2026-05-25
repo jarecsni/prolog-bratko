@@ -47,6 +47,18 @@ family(
      person(noah, jones, date(30, may, 2003), unemployed)]
 ).
 
+family(
+    person(david, miller, date(18, february, 1955), unemployed),
+    person(sarah, miller, date(7, november, 1957), works(barclays, 32000)),
+    [person(oliver, miller, date(12, june, 1985), works(deloitte, 47000))]
+).
+
+family(
+    person(henry,  carter, date(3, january, 1940), works(shell, 38000)),
+    person(claire, carter, date(20, september, 1962), works(harrods, 17500)),
+    [person(james, carter, date(8, april, 1988), works(reuters, 41000))]
+).
+
 
 % -------------------------------------------------------------------------- %
 % Accessor predicates — derive role from position in the family/3 term
