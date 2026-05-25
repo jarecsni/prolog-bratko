@@ -8,5 +8,24 @@
 
 :- consult('../4_family').
 
+% -------------------------------------------------------------------------- %
+% a) names of families with no children
+% -------------------------------------------------------------------------- %
 childless_family(Surname) :-
     family(person(_, Surname, _, _), _, []).
+
+% -------------------------------------------------------------------------- %
+% b) all employed children
+% Generate then filter
+% -------------------------------------------------------------------------- %
+employed_child(Child) :-
+    child(Child),
+    Child = person(_, _, _, works(_, _)).
+
+% -------------------------------------------------------------------------- %
+% b) all employed children
+% Filter (constraint) then generate.
+% -------------------------------------------------------------------------- %
+employed_child2(Child) :-
+    Child = person(_, _, _, works(_, _)),
+    child(Child).
