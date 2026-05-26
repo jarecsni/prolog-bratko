@@ -136,3 +136,12 @@ household_income(Husband, Wife, Children, Total) :-
 %    length(Workers, N).
 %    counts employed people across all families
 % -------------------------------------------------------------------------- %
+
+% -------------------------------------------------------------------------- %
+% nth_member (used here for children selector)
+% Also this is E4.3
+% -------------------------------------------------------------------------- %
+nth_member(0, [H|_], H).
+nth_member(N, [_|T], E) :-
+    succ(N0, N), % N > 0 is one directional, limits uses
+    nth_member(N0, T, E).

@@ -73,3 +73,14 @@ twin(Child1, Child2) :-
     Child1 \== Child2. 
     % Or Child1 @< Child2 (it would reduce symmetric pairs to 1 find)
          
+twin2(Child1, Child2) :-
+    family(_, _, Children),
+    appendo(_, [Child1 | Rest], Children),
+    member(Child2, Children),
+    Child1 = person(_, _, DOB, _),
+    Child2 = person(_, _, DOB, _),
+    Child1 \== Child2. 
+    % Or Child1 @< Child2 (it would reduce symmetric pairs to 1 find)
+
+appendo([], L, L).
+appendo([H|T], L, [H|R]) :- appendo(T, L, R).
