@@ -10,6 +10,7 @@ own shelf under [`books/`](books/); the conventions below are the constant that 
 | Book | Folder | State |
 |---|---|---|
 | Bratko, *Prolog Programming for Artificial Intelligence* | [`books/bratko/`](books/bratko/) | second pass, ch01 |
+| Clocksin & Mellish, *Programming in Prolog* | [`books/clocksin-mellish/`](books/clocksin-mellish/) | ch01, in parallel with Bratko |
 | Sterling & Shapiro, *The Art of Prolog* | [`books/the-art-of-prolog/`](books/the-art-of-prolog/) | not started |
 
 ## Layout
@@ -21,6 +22,12 @@ own shelf under [`books/`](books/); the conventions below are the constant that 
   Not book-bound: an idea met in Bratko and sharpened in Sterling & Shapiro belongs here.
 - `templates/` — skeletons copied into a new section folder. Shared by every book.
 - `lib/` — shared clause bases (e.g. the family database), once something actually recurs.
+- `sandbox/` — spikes. Code that exists to answer a question, not to complete a section;
+  exempt from the artifact set, and never referenced by a chapter map.
+- `reference/` — consulted, not worked through. Deransart et al., *Prolog: The Standard*
+  (the ISO tiebreaker, and the arbiter of "is that Prolog or is that SWI?"), Triska's
+  *Power of Prolog*, the SWI manual. Deliberately not on the shelf: the shelf means
+  "things with chapters I am working through".
 
 ## The artifact set
 

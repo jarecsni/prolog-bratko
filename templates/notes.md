@@ -4,7 +4,7 @@
 
 <!-- The declarative reading: what relation is being stated, not what the machine does. -->
 
-## What Bratko didn't say
+## What the book didn't say
 
 <!-- The missing didactic layer: the connection, framing, or trap the book glosses over. -->
 
