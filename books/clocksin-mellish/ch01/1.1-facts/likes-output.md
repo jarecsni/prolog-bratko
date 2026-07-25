@@ -42,6 +42,36 @@ likes(mary, X), likes(john, X)
 └─
 
 
+## Call Tree
+
+```mermaid
+graph TD
+
+%% Nodes
+A["?- likes(mary, X), likes(john, X)"]
+B["① likes(mary, X)<br/>fact 12<br/>X = food"]
+C["② likes(john, X)"]
+D["③ FAIL likes(john,food)"]
+E["④ REDO likes(mary, X)<br/>fact 13<br/>X = wine"]
+F["⑤ likes(john, X)<br/>fact 14"]
+
+%% Edges
+A --> B
+A --> C
+C --> D
+A --> E
+A --> F
+E -.->|"backtrack"| B
+
+%% Styles
+style A fill:#e1f5ff,stroke:#01579b,stroke-width:3px
+style B fill:#c8e6c9,stroke:#388e3c
+style C fill:#fff9c4,stroke:#f57f17
+style D fill:#ffcdd2,stroke:#c62828
+style E fill:#c8e6c9,stroke:#388e3c
+style F fill:#c8e6c9,stroke:#388e3c
+```
+
 ## Final Answer
 
 ```
