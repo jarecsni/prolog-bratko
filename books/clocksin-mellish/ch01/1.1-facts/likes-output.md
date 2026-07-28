@@ -17,9 +17,10 @@ likes(mary, X), likes(john, X)
 
 ## Execution Timeline
 
+<pre style="line-height: 1.15">
 ┌─ Step 1: likes(mary, X)
 │  Fact: likes(mary, food) [line 12]
-│  => X = food
+│  =&gt; X = food
 └─
 
 ┌─ Step 2: CALL likes(john, X) → likes(john, food)
@@ -33,7 +34,7 @@ likes(mary, X), likes(john, X)
 ┌─ Step 4: REDO likes(mary, X)
 │  Retry of Step 1 — X = food led to failure; undone, seeking another solution
 │  Fact: likes(mary, wine) [line 13]
-│  => X = wine
+│  =&gt; X = wine
 └─
 
 ┌─ Step 5: likes(john, X) → likes(john, wine)
@@ -41,35 +42,40 @@ likes(mary, X), likes(john, X)
 │  Fact: likes(john, wine) [line 14]
 └─
 
+</pre>
 
 ## Call Tree
 
 ```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 46, 'rankSpacing': 50}, 'themeVariables': {'fontSize': '15px'}}}%%
 graph TD
 
 %% Nodes
 A["?- likes(mary, X), likes(john, X)"]
-B["① likes(mary, X)<br/>fact 12<br/>X = food"]
-C["② likes(john, X)"]
-D["③ FAIL likes(john,food)"]
-E["④ REDO likes(mary, X)<br/>fact 13<br/>X = wine"]
-F["⑤ likes(john, X)<br/>fact 14"]
+B["① likes(mary, X)<br/>X = food · fact 12"]
+C["② likes(john, food)"]
+D["③ ✗ fail"]
+E["④ likes(mary, X)<br/>X = wine · fact 13"]
+F["⑤ likes(john, wine)<br/>fact 14"]
+G["✓ X = wine"]
 
-%% Edges
+%% Flow
 A --> B
-A --> C
+B --> C
 C --> D
-A --> E
-A --> F
-E -.->|"backtrack"| B
+D -.->|"backtrack to ①"| B
+B ==>|"next solution"| E
+E --> F
+F --> G
 
 %% Styles
-style A fill:#e1f5ff,stroke:#01579b,stroke-width:3px
-style B fill:#c8e6c9,stroke:#388e3c
-style C fill:#fff9c4,stroke:#f57f17
-style D fill:#ffcdd2,stroke:#c62828
-style E fill:#c8e6c9,stroke:#388e3c
-style F fill:#c8e6c9,stroke:#388e3c
+style A fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#0b2440
+style B fill:#c8e6c9,stroke:#388e3c,color:#14361a
+style C fill:#fff9c4,stroke:#f57f17,color:#4a3208
+style D fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#4a1414
+style E fill:#c8e6c9,stroke:#388e3c,color:#14361a
+style F fill:#c8e6c9,stroke:#388e3c,color:#14361a
+style G fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#14361a
 ```
 
 ## Final Answer
@@ -78,4 +84,4 @@ style F fill:#c8e6c9,stroke:#388e3c
 X = wine
 ```
 
-_Showing first solution only._
+_Showing the first solution only — re-run with `-n <count>` or `--all` to see more._
