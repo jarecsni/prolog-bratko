@@ -1,0 +1,13 @@
+{
+  "name": "prolog-notebook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Spike: a browser-native Prolog notebook on swipl-wasm, as a substrate for executable book sections",
+  "scripts": {
+    "serve": "python3 -m http.server 8777"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "swipl-wasm": "^8.0.4"
+  }
+}
