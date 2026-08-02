@@ -57,18 +57,52 @@ mother(alice, irene).
 
 % diff(X, Y) — X and Y are not the same individual.
 % The book assumes this exists; SWI spells the non-pure version \== and the
-% pure, constraint-based one dif/2. \== is enough while both arguments are
-% bound at call time — which, in every rule below, they will be.
+% pure, constraint-based one dif/2. \== is a snapshot: it compares the terms
+% as they stand at call time, so an unbound argument passes it vacuously and
+% is never re-checked once bound. Every caller must therefore place it where
+% both arguments are already bound — see sister_of/2, where it comes last for
+% exactly that reason. dif/2 is a constraint and carries no such obligation;
+% see sister_of_dif/2, which states it first and still works.
 diff(X, Y) :- X \== Y.
 
 % --- to define ------------------------------------------------------------
-%
-% parent(P, C)          P is a parent of C
-% sister_of(X, Y)       X is a sister of Y            (the §1.8 rule, fixed)
-% brother_of(X, Y)
-% grandparent(G, C)
-% grandmother(G, C)
-% grandfather(G, C)
-% aunt_of(A, X)
-% uncle_of(U, X)
-% cousin_of(X, Y)
+is_mother(X) :-
+    mother(X, _).
+
+is_father(X) :-
+    father(X, _).
+
+is_son(X) :- 
+    male(X),
+    parent(_, X).
+
+is_son_unique(X) :- 
+    male(X),
+    once(parent(_, X)).
+
+sons(Sons) :- 
+    findall(X, is_son(X), L), 
+    sort(L, Sons).
+
+% is X a parent of Y
+parent(X, Y) :- 
+    father(X, Y);
+    mother(X, Y).
+
+% X is a sister of Y
+sister_of(X, Y) :-
+    female(X),
+    parent(Z, X),
+    parent(Z, Y),
+    diff(X, Y).
+
+sister_of_dif(X, Y) :-
+    female(X),
+    dif(X, Y), % ! dif/2 works with unbound vars too, it's a constraint
+    parent(Z, X),
+    parent(Z, Y).
+
+% X is a grandpa of Y
+grandpa_of(X, Y) :-
+    father(X, Z),
+    parent(Z, Y).
